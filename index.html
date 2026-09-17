@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso | Creador de Encuestas</title>
+  <!-- Tailwind CSS CDN para layout ágil -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Hoja de Estilos Global -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <main class="w-full max-w-md">
+    <!-- Brand / Logo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-200 mb-3 text-2xl">
+        📊
+      </div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Panel de Creador</h1>
+      <p class="text-sm text-slate-500 mt-1">Ingresa para construir tus encuestas interactivas</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="app-card p-8 sm:p-10">
+      <form id="login-form" class="space-y-5">
+        <div>
+          <label for="login-email" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+            Correo Electrónico
+          </label>
+          <input 
+            type="email" 
+            id="login-email" 
+            required 
+            value="bjesushc2006@gmail.com" 
+            class="app-input"
+            placeholder="tu@correo.com"
+          >
+        </div>
+
+        <div>
+          <label for="login-password" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+            Contraseña
+          </label>
+          <input 
+            type="password" 
+            id="login-password" 
+            required 
+            value="B1$@ngel" 
+            class="app-input"
+            placeholder="••••••••"
+          >
+        </div>
+
+        <button type="submit" id="btn-submit" class="btn-primary w-full py-3">
+          <span id="btn-text">Ingresar al Constructor</span>
+        </button>
+
+        <div id="login-error" class="hidden p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-medium text-center">
+        </div>
+      </form>
+    </div>
+
+    <p class="text-center text-xs text-slate-400 mt-8">
+      Plataforma de Encuestas Dinámicas &copy; 2026
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

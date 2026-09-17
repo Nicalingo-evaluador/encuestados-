@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Constructor de Encuesta | NicaSurv</title>
+  <!-- Catálogo Extendido de Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700&family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;600;700&family=Outfit:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;600;700&family=Poppins:wght@400;600;700&family=Raleway:wght@400;600;700&family=Roboto:wght@400;500;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Estilos Globales del Proyecto -->
+  <link rel="stylesheet" href="../style.css">
+  <!-- Estilos Específicos del Constructor -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-['Inter'] min-h-screen flex flex-col">
+
+  <!-- HEADER DE NAVEGACIÓN -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <a href="./index.html" class="flex items-center space-x-2">
+          <span class="bg-indigo-600 text-white p-2 rounded-xl text-lg font-bold">📊</span>
+          <span class="font-extrabold text-slate-900 tracking-tight text-lg">NicaSurv</span>
+        </a>
+        <span class="hidden sm:inline text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700">
+          Constructor
+        </span>
+      </div>
+
+      <nav class="flex items-center space-x-2 sm:space-x-3">
+        <button type="button" onclick="goToHistory()" class="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-4">
+          📑 Historial
+        </button>
+        <button type="button" onclick="goToStats()" class="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-4">
+          📈 Estadísticas
+        </button>
+        <button type="button" id="btn-logout" class="text-xs sm:text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition">
+          Cerrar Sesión
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 py-8">
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Diseña tu Encuesta</h1>
+        <p class="text-sm text-slate-500 mt-1">Personaliza el aspecto, agrega preguntas y define caminos condicionales.</p>
+      </div>
+
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <button type="button" id="btn-save-draft" class="btn-secondary flex-1 sm:flex-none text-sm py-2.5">
+          💾 Guardar Borrador
+        </button>
+        <button type="button" id="btn-publish" class="btn-primary flex-1 sm:flex-none text-sm py-2.5">
+          🚀 Publicar Encuesta
+        </button>
+      </div>
+    </div>
+
+    <form id="survey-builder-form" class="space-y-8">
+
+      <!-- BLOQUE 1: PERSONALIZACIÓN GENERAL & TEMA -->
+      <section class="app-card p-6 sm:p-8 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span>🎨</span> Identidad y Personalización
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-500">Configura el título, la descripción y el estilo visual de la sub-web de tu encuesta.</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6">
+          <div>
+            <label for="survey-title" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              Título de la Encuesta <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="survey-title" 
+              required 
+              placeholder="Ej. Encuesta de Preferencias y Servicios 2026" 
+              class="app-input font-medium"
+            >
+          </div>
+
+          <div>
+            <label for="survey-desc" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              Descripción o Instrucciones
+            </label>
+            <textarea 
+              id="survey-desc" 
+              rows="3" 
+              placeholder="Explica a los encuestados el propósito de este formulario..." 
+              class="app-input resize-y"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Opciones de Color, Fondo y Tipografía -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+          
+          <div>
+            <label for="survey-color" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              Color Primario
+            </label>
+            <div class="flex items-center gap-3">
+              <input 
+                type="color" 
+                id="survey-color" 
+                value="#4f46e5" 
+                class="w-12 h-10 p-1 border border-slate-200 rounded-lg cursor-pointer bg-white"
+              >
+              <span id="color-hex-label" class="text-xs font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded">#4f46e5</span>
+            </div>
+          </div>
+
+          <div>
+            <label for="survey-bg-type" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              Fondo de la Pantalla
+            </label>
+            <select id="survey-bg-type" class="app-input">
+              <option value="color">Color Sólido</option>
+              <option value="image">Imagen de Fondo</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="survey-font" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              Fuente Tipográfica
+            </label>
+            <select id="survey-font" class="app-input">
+              <!-- Primera opción: Importar código propio -->
+              <option value="custom">✨ Importar mi propia tipografía (&lt;link&gt;)</option>
+
+              <!-- Catálogo expandido -->
+              <optgroup label="Sans-Serif (Modernas y Limpias)">
+                <option value="Inter" selected>Inter (Moderna y Neutra)</option>
+                <option value="Poppins">Poppins (Geométrica)</option>
+                <option value="Roboto">Roboto (Clásica y Legible)</option>
+                <option value="Montserrat">Montserrat (Elegante)</option>
+                <option value="Outfit">Outfit (Tecnológica)</option>
+                <option value="Plus Jakarta Sans">Plus Jakarta Sans (Moderna)</option>
+              </optgroup>
+
+              <optgroup label="Serif (Clásicas y Literarias)">
+                <option value="Playfair Display">Playfair Display (Editorial / Títulos)</option>
+                <option value="Lora">Lora (Literaria)</option>
+                <option value="Cinzel">Cinzel (Clásica / Romana)</option>
+              </optgroup>
+
+              <optgroup label="Display & Código">
+                <option value="Space Grotesk">Space Grotesk (Brutalista / Tech)</option>
+                <option value="Bebas Neue">Bebas Neue (Titular / Mayúsculas)</option>
+                <option value="Raleway">Raleway (Delicada y Artística)</option>
+                <option value="Fira Code">Fira Code (Monospace / Código)</option>
+              </optgroup>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- SECCIÓN CONDICIONAL: IMPORTADOR DE TIPOGRAFÍA PROPIA -->
+        <div id="custom-font-box" class="hidden p-5 bg-indigo-50/60 border border-indigo-200 rounded-2xl space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="text-indigo-600 text-lg">🔤</span>
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800">Importador de Tipografía Externa</h4>
+              <p class="text-xs text-slate-500">Pega el código &lt;link&gt; que te entrega Google Fonts u otro proveedor y escribe el nombre de la familia.</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label for="custom-font-link" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                Código &lt;link&gt; de la fuente
+              </label>
+              <textarea 
+                id="custom-font-link" 
+                rows="2" 
+                class="app-input font-mono text-xs resize-y bg-white" 
+                placeholder='<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;700&display=swap" rel="stylesheet">'
+              ></textarea>
+            </div>
+
+            <div>
+              <label for="custom-font-name" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+                Nombre de la Familia Tipográfica (font-family)
+              </label>
+              <div class="flex items-center gap-3">
+                <input 
+                  type="text" 
+                  id="custom-font-name" 
+                  class="app-input text-xs font-medium bg-white" 
+                  placeholder="Ej. Google Sans"
+                >
+                <button type="button" id="btn-preview-font" class="btn-secondary text-xs py-2 px-3 whitespace-nowrap">
+                  👁️ Probar Fuente
+                </button>
+              </div>
+            </div>
+
+            <div id="custom-font-preview" class="p-3 bg-white rounded-xl border border-slate-200 text-sm text-slate-700 font-medium text-center">
+              Previsualización: "El veloz murciélago hindú comía feliz cardillo y kiwi. 1234567890"
+            </div>
+          </div>
+        </div>
+
+        <!-- Selector Dinámico de Fondo -->
+        <div id="bg-solid-picker" class="pt-2">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+            Seleccionar Color de Fondo
+          </label>
+          <div class="flex items-center gap-3">
+            <input 
+              type="color" 
+              id="bg-solid-color" 
+              value="#f8fafc" 
+              class="w-12 h-10 p-1 border border-slate-200 rounded-lg cursor-pointer bg-white"
+            >
+            <span id="bg-hex-label" class="text-xs font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded">#f8fafc</span>
+          </div>
+        </div>
+
+        <div id="bg-image-uploader" class="hidden pt-2">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+            Subir Imagen de Fondo (Máx 5MB)
+          </label>
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <input 
+              type="file" 
+              id="bg-image-file" 
+              accept="image/png, image/jpeg, image/webp" 
+              class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+            >
+            <span id="upload-status" class="text-xs text-slate-400"></span>
+          </div>
+          <div id="bg-image-preview-container" class="hidden mt-3">
+            <img id="bg-image-preview" src="" alt="Previsualización" class="h-28 w-48 object-cover rounded-xl border border-slate-200">
+          </div>
+        </div>
+
+      </section>
+
+      <!-- BLOQUE 2: PREGUNTAS -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span>📋</span> Preguntas del Formulario
+          </h2>
+          <span id="questions-counter" class="text-xs font-medium text-slate-400">0 preguntas añadidas</span>
+        </div>
+
+        <div id="questions-container" class="space-y-4"></div>
+
+        <button 
+          type="button" 
+          id="btn-add-question" 
+          class="w-full py-4 border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 rounded-2xl text-slate-600 hover:text-indigo-600 font-semibold text-sm transition flex items-center justify-center gap-2"
+        >
+          <span>➕</span> Añadir Nueva Pregunta
+        </button>
+      </section>
+
+    </form>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

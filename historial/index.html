@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de Encuestas | NicaSurv</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Estilos Globales del Proyecto -->
+  <link rel="stylesheet" href="../style.css">
+  <!-- Estilos Específicos del Historial -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-['Inter'] min-h-screen flex flex-col">
+
+  <!-- HEADER DE NAVEGACIÓN -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Marca / Logo -->
+      <div class="flex items-center space-x-3">
+        <a href="../crear-encuesta/index.html" class="flex items-center space-x-2">
+          <span class="bg-indigo-600 text-white p-2 rounded-xl text-lg font-bold">📊</span>
+          <span class="font-extrabold text-slate-900 tracking-tight text-lg">NicaSurv</span>
+        </a>
+        <span class="hidden sm:inline text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700">
+          Historial
+        </span>
+      </div>
+
+      <!-- Enlaces y Botones de Navegación -->
+      <nav class="flex items-center space-x-2 sm:space-x-3">
+        <button type="button" onclick="goToBuilder()" class="btn-primary text-xs sm:text-sm py-2 px-3 sm:px-4">
+          ➕ Crear Encuesta
+        </button>
+        <button type="button" onclick="goToStats()" class="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-4">
+          📈 Estadísticas
+        </button>
+        <button id="btn-logout" class="text-xs sm:text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition">
+          Cerrar Sesión
+        </button>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Barra de título y buscador -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Mis Encuestas</h1>
+        <p class="text-sm text-slate-500 mt-1">Administra tus formularios, copia los links de acceso y revisa las estadísticas.</p>
+      </div>
+
+      <!-- Buscador en tiempo real -->
+      <div class="w-full sm:w-72">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Buscar encuesta por título..." 
+          class="app-input text-sm"
+        >
+      </div>
+    </div>
+
+    <!-- Indicador de carga -->
+    <div id="loading-spinner" class="flex flex-col items-center justify-center py-20">
+      <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+      <p class="text-sm text-slate-500">Cargando tus encuestas...</p>
+    </div>
+
+    <!-- Grid de Cards de Encuestas -->
+    <div id="surveys-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Inyectado dinámicamente -->
+    </div>
+
+    <!-- Estado vacío (Si no hay encuestas) -->
+    <div id="empty-state" class="hidden text-center py-16 px-4 bg-white rounded-3xl border-2 border-dashed border-slate-200 max-w-lg mx-auto mt-6">
+      <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4">
+        📝
+      </div>
+      <h3 class="text-lg font-bold text-slate-900 mb-1">Aún no has creado ninguna encuesta</h3>
+      <p class="text-sm text-slate-500 mb-6">Diseña tu primer formulario interactivo con colores y caminos condicionales.</p>
+      <button type="button" onclick="goToBuilder()" class="btn-primary inline-flex text-sm py-2.5 px-5">
+        🚀 Crear Primera Encuesta
+      </button>
+    </div>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

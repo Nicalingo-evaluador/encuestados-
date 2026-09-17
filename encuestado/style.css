@@ -1,0 +1,74 @@
+/* Estilos específicos para la sub-web pública del encuestado */
+
+.survey-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2.5rem 1rem;
+}
+
+/* Soporte para imágenes de fondo configuradas en el creador */
+body.bg-is-image {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+.survey-card-container {
+  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.08);
+}
+
+/* Manejo de visibilidad en caminos condicionales */
+.conditional-question {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.conditional-question.hidden-question {
+  display: none !important;
+}
+
+/* Opciones de selección */
+.choice-option-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  border: 1.5px solid #e2e8f0;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.choice-option-label:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+}
+
+/* Botones de la escala 1 al 5 */
+.scale-btn {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.85rem;
+  border: 1.5px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background-color: #ffffff;
+}
+
+.scale-btn:hover {
+  border-color: #94a3b8;
+  transform: translateY(-2px);
+}

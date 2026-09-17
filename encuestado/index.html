@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Completar Encuesta | NicaSurv</title>
+  <!-- Google Fonts dinámicas -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Estilos Globales -->
+  <link rel="stylesheet" href="../style.css">
+  <!-- Estilos del Encuestado -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body id="survey-body" class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <div class="survey-wrapper">
+    <main class="w-full max-w-2xl">
+
+      <!-- Estado 1: Pantalla de Carga -->
+      <div id="loading-state" class="text-center py-24">
+        <div class="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-slate-500 font-medium">Cargando encuesta...</p>
+      </div>
+
+      <!-- Estado 2: Error o No Encontrada -->
+      <div id="error-state" class="hidden app-card p-8 text-center bg-white border border-slate-200">
+        <div class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-3">⚠️</div>
+        <h2 class="text-xl font-bold text-slate-900 mb-1" id="error-title">Encuesta no disponible</h2>
+        <p class="text-sm text-slate-500" id="error-desc">El enlace no es válido o la encuesta aún no ha sido publicada por su creador.</p>
+      </div>
+
+      <!-- Estado 3: Formulario Listo para Responder -->
+      <div id="survey-container" class="hidden space-y-6">
+
+        <!-- Cabecera de la encuesta -->
+        <header class="app-card survey-card-container p-6 sm:p-8 border-t-4" id="survey-header-card">
+          <h1 id="survey-display-title" class="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight"></h1>
+          <p id="survey-display-desc" class="text-sm text-slate-600 mt-2 whitespace-pre-line"></p>
+          <div class="mt-4 flex items-center gap-2 text-xs text-slate-400 font-medium border-t border-slate-100 pt-3">
+            <span>🔒 Participación 100% anónima y segura</span>
+          </div>
+        </header>
+
+        <!-- Formulario de Preguntas -->
+        <form id="answers-form" class="space-y-5">
+          <div id="questions-list" class="space-y-5">
+            <!-- Renderizado dinámico de preguntas -->
+          </div>
+
+          <!-- Botón de Envío -->
+          <div class="pt-4">
+            <button type="submit" id="btn-submit-survey" class="btn-primary w-full py-3.5 text-base font-bold shadow-lg">
+              <span id="btn-submit-text">Enviar Respuestas</span>
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+      <!-- Estado 4: Pantalla de Agradecimiento -->
+      <div id="success-state" class="hidden app-card survey-card-container p-8 sm:p-12 text-center">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4">
+          ✨
+        </div>
+        <h2 class="text-2xl font-black text-slate-900 mb-2">¡Muchas gracias!</h2>
+        <p class="text-slate-600 text-sm max-w-md mx-auto">Tus respuestas han sido procesadas y guardadas confidencialmente.</p>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

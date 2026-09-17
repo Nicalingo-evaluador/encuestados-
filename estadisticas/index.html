@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Estadísticas Avanzadas | NicaSurv</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Estilos Globales -->
+  <link rel="stylesheet" href="../style.css">
+  <!-- Estilos Específicos -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-['Inter'] min-h-screen flex flex-col">
+
+  <!-- HEADER DE NAVEGACIÓN -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <a href="../crear-encuesta/index.html" class="flex items-center space-x-2">
+          <span class="bg-indigo-600 text-white p-2 rounded-xl text-lg font-bold">📊</span>
+          <span class="font-extrabold text-slate-900 tracking-tight text-lg">NicaSurv</span>
+        </a>
+        <span class="hidden sm:inline text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700">
+          Analytics Studio
+        </span>
+      </div>
+
+      <nav class="flex items-center space-x-2 sm:space-x-3">
+        <button type="button" onclick="goToBuilder()" class="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-4">
+          ➕ Crear Encuesta
+        </button>
+        <button type="button" onclick="goToHistory()" class="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-4">
+          📑 Historial
+        </button>
+        <button type="button" id="btn-logout" class="text-xs sm:text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition">
+          Cerrar Sesión
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- SECCIÓN 1: BUSCADOR DE ENCUESTAS -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Estadísticas & Gráficas Cruzadas</h1>
+        <p class="text-sm text-slate-500 mt-1">Selecciona una encuesta del carrusel, personaliza los filtros multidimensionales y exporta tu gráfico.</p>
+      </div>
+
+      <div class="w-full sm:w-80">
+        <input 
+          type="text" 
+          id="search-survey-input" 
+          placeholder="🔍 Buscar encuesta por nombre..." 
+          class="app-input text-sm bg-white shadow-sm"
+        >
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: CARRUSEL DE CARDS HORIZONTAL -->
+    <div class="space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Encuestas Disponibles</span>
+        <div class="flex gap-1.5">
+          <button type="button" onclick="scrollCarousel(-1)" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition text-xs shadow-sm">◀</button>
+          <button type="button" onclick="scrollCarousel(1)" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition text-xs shadow-sm">▶</button>
+        </div>
+      </div>
+
+      <div id="carousel-container" class="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x scrollbar-thin">
+        <!-- Cards inyectadas por JS -->
+      </div>
+    </div>
+
+    <!-- SPINNER DE CARGA -->
+    <div id="loading-spinner" class="flex flex-col items-center justify-center py-20">
+      <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+      <p class="text-sm text-slate-500 font-medium">Procesando respuestas y preparando filtros...</p>
+    </div>
+
+    <!-- SECCIÓN 3: PANEL DE CONFIGURACIÓN Y VISUALIZACIÓN (SE MUESTRA TRAS ELEGIR ENCUESTA) -->
+    <div id="stats-dashboard" class="hidden space-y-8">
+
+      <!-- TARJETA RESUMEN DE LA ENCUESTA ACTIVA -->
+      <div class="app-card p-6 bg-white border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <span id="active-survey-badge" class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700">Encuesta Activa</span>
+          <h2 id="active-survey-title" class="text-xl sm:text-2xl font-black text-slate-900 mt-2">Título de Encuesta</h2>
+          <p id="active-survey-desc" class="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">Descripción</p>
+        </div>
+
+        <div class="bg-indigo-50/80 border border-indigo-100 p-4 rounded-2xl flex items-center gap-4 w-full md:w-auto">
+          <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-2xl shadow-md shadow-indigo-200">
+            👥
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Encuestados Totales</p>
+            <p id="active-survey-responses" class="text-3xl font-black text-indigo-700">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOTOR DE CONFIGURACIÓN DE FILTROS Y GRÁFICAS -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- PANEL DE CONTROL / CONFIGURADOR -->
+        <div class="app-card p-6 bg-white border border-slate-200 space-y-6">
+          <div class="border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <span>⚙️</span> Parámetros del Gráfico
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Configura qué quieres graficar y qué condiciones filtrar.</p>
+          </div>
+
+          <!-- 1. Tipo de Gráfica (5 Tipos) -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Tipo de Gráfica</label>
+            <select id="chart-type-select" class="app-input text-xs font-medium">
+              <option value="bar">📊 Barras Verticales</option>
+              <option value="horizontalBar">📶 Barras Horizontales</option>
+              <option value="line">📈 Punteada con Área (Tendencia)</option>
+              <option value="pie">🥧 Pastel (Circular)</option>
+              <option value="doughnut">🍩 Dona (Anillo)</option>
+            </select>
+          </div>
+
+          <!-- 2. Pregunta Principal a Graficar -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Variable a Graficar (Eje Principal)</label>
+            <select id="primary-question-select" class="app-input text-xs font-medium">
+              <!-- Opciones inyectadas dinámicamente -->
+            </select>
+          </div>
+
+          <!-- 3. Filtro Condicional A -->
+          <div class="space-y-2 pt-2 border-t border-slate-100">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Filtro Condicional #1 (Opcional)</label>
+            <select id="filter-a-question" class="app-input text-xs">
+              <option value="">-- Sin Filtro #1 --</option>
+            </select>
+            <select id="filter-a-value" class="app-input text-xs hidden bg-slate-50 font-medium text-indigo-700">
+              <option value="">-- Selecciona valor exacto --</option>
+            </select>
+          </div>
+
+          <!-- 4. Filtro Condicional B (Cruce secundario) -->
+          <div class="space-y-2 pt-2 border-t border-slate-100">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Filtro Condicional #2 (Opcional)</label>
+            <select id="filter-b-question" class="app-input text-xs">
+              <option value="">-- Sin Filtro #2 --</option>
+            </select>
+            <select id="filter-b-value" class="app-input text-xs hidden bg-slate-50 font-medium text-indigo-700">
+              <option value="">-- Selecciona valor exacto --</option>
+            </select>
+          </div>
+
+          <!-- Botón de Actualizar / Aplicar Filtros -->
+          <div class="pt-2">
+            <button type="button" id="btn-apply-filters" class="btn-primary w-full py-2.5 text-xs font-bold">
+              ⚡ Aplicar Filtros y Graficar
+            </button>
+          </div>
+        </div>
+
+        <!-- VISUALIZADOR DEL GRÁFICO + BOTÓN DE DESCARGA -->
+        <div class="lg:col-span-2 app-card p-6 bg-white border border-slate-200 flex flex-col justify-between space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+            <div>
+              <span id="chart-sub-label" class="text-xs font-semibold text-slate-400">Distribución de datos</span>
+              <h4 id="chart-display-title" class="text-base font-bold text-slate-900">Vista Gráfica</h4>
+            </div>
+            <!-- Botón de Descarga de Imagen -->
+            <button type="button" id="btn-download-chart" class="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 font-bold shadow-sm">
+              💾 Descargar Imagen (.PNG)
+            </button>
+          </div>
+
+          <!-- Contenedor del Canvas -->
+          <div class="relative w-full flex-grow flex items-center justify-center min-h-[340px] p-2">
+            <canvas id="main-analytics-canvas"></canvas>
+            <div id="no-filtered-data" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white/90">
+              <p class="text-3xl mb-1">🔍</p>
+              <p class="text-xs font-bold text-slate-700">No se encontraron respuestas con estos filtros combinados.</p>
+              <p class="text-xs text-slate-400">Intenta flexibilizar o retirar uno de los filtros condicionales.</p>
+            </div>
+          </div>
+
+          <!-- Indicador de total de registros filtrados -->
+          <div class="text-xs text-slate-400 border-t border-slate-100 pt-3 flex justify-between items-center">
+            <span id="filtered-sample-count">Muestras analizadas: 0</span>
+            <span class="font-mono text-slate-300">NicaSurv Analytics</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ESTADO VACÍO (CUANDO NO HAY ENCUESTAS CREADAS) -->
+    <div id="empty-state" class="hidden text-center py-16 px-4 bg-white rounded-3xl border-2 border-dashed border-slate-200 max-w-lg mx-auto">
+      <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4">
+        📊
+      </div>
+      <h3 class="text-lg font-bold text-slate-900 mb-1">Aún no tienes encuestas con respuestas</h3>
+      <p class="text-sm text-slate-500 mb-6">Crea formularios interactivos y compártelos para empezar a visualizar analíticas.</p>
+      <button type="button" onclick="goToBuilder()" class="btn-primary inline-flex text-sm py-2.5 px-5">
+        🚀 Crear Primera Encuesta
+      </button>
+    </div>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
