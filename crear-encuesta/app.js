@@ -85,7 +85,6 @@ surveyBgType.addEventListener('change', (e) => {
   }
 });
 
-// Selector de Fuente y lógica de importación propia
 surveyFont.addEventListener('change', (e) => {
   if (e.target.value === 'custom') {
     customFontBox.classList.remove('hidden');
@@ -95,7 +94,6 @@ surveyFont.addEventListener('change', (e) => {
   }
 });
 
-// Inyectar y probar dinámicamente la fuente importada
 btnPreviewFont.addEventListener('click', applyCustomFontPreview);
 
 function applyCustomFontPreview() {
@@ -108,7 +106,6 @@ function applyCustomFontPreview() {
     return;
   }
 
-  // Extraer href del tag link ingresado por el usuario
   if (linkHtml) {
     const hrefMatch = linkHtml.match(/href=["']([^"']+)["']/);
     const fontUrl = hrefMatch ? hrefMatch[1] : linkHtml;
@@ -129,7 +126,6 @@ function applyCustomFontPreview() {
   document.body.style.fontFamily = `'${fontName}', sans-serif`;
 }
 
-// Subida de fondo a Storage
 bgImageFile.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -332,7 +328,6 @@ function renderTypeContent(q, qIndex) {
   }
 }
 
-// Handlers globales
 window.updateQuestionTitle = (qIndex, value) => { questions[qIndex].title = value; };
 window.updateQuestionType = (qIndex, value) => { questions[qIndex].type = value; renderQuestions(); };
 window.toggleRequired = (qIndex, value) => { questions[qIndex].is_required = value; };
@@ -412,7 +407,6 @@ async function saveSurvey(isPublished) {
   const bgValue = bgType === 'image' ? (uploadedImageUrl || '#f8fafc') : bgSolidColor.value;
   const primaryCol = surveyColor.value;
 
-  // Lógica de empaquetado de fuente (catálogo o personalizada)
   let fontFamilyPayload = surveyFont.value;
   if (surveyFont.value === 'custom') {
     const fName = customFontName.value.trim();
@@ -427,7 +421,6 @@ async function saveSurvey(isPublished) {
     const hrefMatch = fLink.match(/href=["']([^"']+)["']/);
     const cleanUrl = hrefMatch ? hrefMatch[1] : fLink;
 
-    // Se guarda en formato JSON serializado: {"name": "Google Sans", "url": "https://..."}
     fontFamilyPayload = JSON.stringify({
       name: fName,
       url: cleanUrl
@@ -530,7 +523,17 @@ async function saveSurvey(isPublished) {
 }
 
 function showSuccessModal(slug, isPublished) {
-  const baseUrl = window.location.href.split('/crear-encuesta/')[0];
+  const fullHref = window.location.href;
+  let baseUrl = '';
+
+  if (fullHref.includes('/crear-encuesta/')) {
+    baseUrl = fullHref.split('/crear-encuesta/')[0];
+  } else if (fullHref.includes('/crear-encuesta')) {
+    baseUrl = fullHref.split('/crear-encuesta')[0];
+  } else {
+    baseUrl = fullHref.substring(0, fullHref.lastIndexOf('/'));
+  }
+
   const directSurveyUrl = `${baseUrl}/encuestado/index.html?s=${slug}`;
 
   const modalHtml = `

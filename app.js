@@ -11,15 +11,14 @@ const loginError = document.getElementById('login-error');
 const btnSubmit = document.getElementById('btn-submit');
 const btnText = document.getElementById('btn-text');
 
-// Redirección segura según el entorno
-function navigateTo(path) {
-  const currentPath = window.location.pathname;
-  // Si estamos en la raíz del servidor
-  if (currentPath.endsWith('/') || currentPath.endsWith('index.html')) {
-    window.location.href = path;
-  } else {
-    window.location.href = './' + path;
-  }
+// Redirección segura compatible con subdirectorios de GitHub Pages
+function navigateTo(targetRelativePath) {
+  const fullUrl = window.location.href;
+  const baseUrl = fullUrl.includes('index.html')
+    ? fullUrl.substring(0, fullUrl.lastIndexOf('/'))
+    : fullUrl.replace(/\/+$/, '');
+
+  window.location.href = `${baseUrl}/${targetRelativePath}`;
 }
 
 // Verificar si ya hay una sesión activa

@@ -9,7 +9,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let surveyData = null;
 let questionsData = [];
 let conditionsData = [];
-let userAnswers = {}; // { [question_id]: valor_o_array }
+let userAnswers = {};
 
 // Referencias del DOM
 const surveyBody = document.getElementById('survey-body');
@@ -40,7 +40,6 @@ async function initSurvey() {
   }
 
   try {
-    // Consultar la encuesta activa por su slug
     const { data: survey, error: sError } = await supabaseClient
       .from('surveys')
       .select('*')
@@ -59,7 +58,6 @@ async function initSurvey() {
 
     surveyData = survey;
 
-    // Consultar preguntas y sus opciones
     const { data: questions, error: qError } = await supabaseClient
       .from('questions')
       .select(`
@@ -76,7 +74,6 @@ async function initSurvey() {
     if (qError) throw qError;
     questionsData = questions || [];
 
-    // Consultar reglas condicionales
     const { data: conditions, error: cError } = await supabaseClient
       .from('question_conditions')
       .select('*')
@@ -98,11 +95,23 @@ async function initSurvey() {
 }
 
 // ==========================================================
-// 2. APLICAR TEMA PERSONALIZADO
+// 2. APLICAR TEMA Y TIPOGRAFÍAS DINÁMICAS
 // ==========================================================
 function applySurveyTheme(theme) {
   if (theme.font_family) {
-    surveyBody.style.fontFamily = `'${theme.font_family}', system-ui, sans-serif`;
+    try {
+      const fontObj = JSON.parse(theme.font_family);
+      if (fontObj && fontObj.url && fontObj.url.startsWith('http')) {
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = fontObj.url;
+        document.head.appendChild(linkEl);
+      }
+      const fontName = fontObj.name || 'Inter';
+      surveyBody.style.fontFamily = `'${fontName}', system-ui, sans-serif`;
+    } catch (e) {
+      surveyBody.style.fontFamily = `'${theme.font_family}', system-ui, sans-serif`;
+    }
   }
 
   const primary = theme.primary_color || '#4f46e5';
@@ -133,7 +142,6 @@ function renderQuestions() {
 
     let optionsHtml = '';
 
-    // Opción única (Radio)
     if (q.question_type === 'multiple_choice') {
       const sortedOpts = (q.question_options || []).sort((a, b) => a.order_index - b.order_index);
       optionsHtml = sortedOpts.map(opt => `
@@ -142,9 +150,7 @@ function renderQuestions() {
           <span class="text-sm font-medium text-slate-700">${escapeHtml(opt.label)}</span>
         </label>
       `).join('');
-    }
-    // Casillas múltiples (Checkbox)
-    else if (q.question_type === 'checkbox') {
+    } else if (q.question_type === 'checkbox') {
       const sortedOpts = (q.question_options || []).sort((a, b) => a.order_index - b.order_index);
       optionsHtml = sortedOpts.map(opt => `
         <label class="choice-option-label" onclick="handleCheckboxToggle('${q.id}', '${escapeHtml(opt.label)}')">
@@ -152,9 +158,7 @@ function renderQuestions() {
           <span class="text-sm font-medium text-slate-700">${escapeHtml(opt.label)}</span>
         </label>
       `).join('');
-    }
-    // Escala del 1 al 5
-    else if (q.question_type === 'scale') {
+    } else if (q.question_type === 'scale') {
       optionsHtml = `
         <div class="space-y-3">
           <div class="flex items-center justify-between gap-2 max-w-sm pt-2">
@@ -170,9 +174,7 @@ function renderQuestions() {
           </div>
         </div>
       `;
-    }
-    // Texto abierto
-    else if (q.question_type === 'text') {
+    } else if (q.question_type === 'text') {
       optionsHtml = `
         <textarea rows="3" class="app-input text-sm resize-y" placeholder="Escribe tu respuesta aquí..." oninput="handleTextAnswer('${q.id}', this.value)"></textarea>
       `;
@@ -275,7 +277,6 @@ function evaluateConditions() {
 answersForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // Validar preguntas obligatorias que estén visibles
   for (let i = 0; i < questionsData.length; i++) {
     const q = questionsData[i];
     const card = document.getElementById(`q-card-${q.id}`);

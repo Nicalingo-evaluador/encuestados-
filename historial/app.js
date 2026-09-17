@@ -159,9 +159,13 @@ function renderCards(surveysList) {
   });
 }
 
-// 5. Copiar enlace público de la sub-web
+// 5. Copiar enlace público adaptado a GitHub Pages y entornos locales
 window.copyLink = (slug) => {
-  const baseUrl = window.location.href.split('/historial/')[0];
+  const fullHref = window.location.href;
+  const baseUrl = fullHref.includes('/historial/')
+    ? fullHref.split('/historial/')[0]
+    : fullHref.substring(0, fullHref.lastIndexOf('/'));
+
   const publicUrl = `${baseUrl}/encuestado/index.html?s=${slug}`;
   navigator.clipboard.writeText(publicUrl);
   alert("¡Enlace directo copiado al portapapeles!");
