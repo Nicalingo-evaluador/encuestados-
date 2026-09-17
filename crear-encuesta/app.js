@@ -7,6 +7,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Estado general del constructor
 let currentUser = null;
+let editingSurveyId = null; // Almacena el ID de la encuesta en modo edición
 let uploadedImageUrl = null;
 let questions = [];
 
@@ -38,7 +39,7 @@ const btnPublish = document.getElementById('btn-publish');
 const btnLogout = document.getElementById('btn-logout');
 
 // ==========================================================
-// 1. SESIÓN Y NAVEGACIÓN
+// 1. SESIÓN, NAVEGACIÓN Y CARGA DE EDICIÓN
 // ==========================================================
 async function initSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -47,6 +48,17 @@ async function initSession() {
     return;
   }
   currentUser = session.user;
+
+  // Leer si viene un parámetro ?edit=ID en la URL
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get('edit');
+
+  if (editId) {
+    editingSurveyId = editId;
+    await loadSurveyForEditing(editId);
+  } else {
+    btnAddQuestion.click();
+  }
 }
 
 window.goToHistory = () => {
@@ -62,6 +74,115 @@ if (btnLogout) {
     await supabaseClient.auth.signOut();
     window.location.href = "../index.html";
   });
+}
+
+// Cargar datos de la encuesta existente
+async function loadSurveyForEditing(surveyId) {
+  try {
+    // 1. Cargar datos principales de la encuesta
+    const { data: survey, error: sError } = await supabaseClient
+      .from('surveys')
+      .select('*')
+      .eq('id', surveyId)
+      .eq('user_id', currentUser.id)
+      .single();
+
+    if (sError || !survey) {
+      alert("No se pudo cargar la encuesta solicitada o no tienes permisos.");
+      window.location.href = "index.html";
+      return;
+    }
+
+    // Rellenar formulario principal
+    surveyTitle.value = survey.title || '';
+    surveyDesc.value = survey.description || '';
+    surveyColor.value = survey.primary_color || '#4f46e5';
+    colorHexLabel.textContent = survey.primary_color || '#4f46e5';
+
+    // Tipografía
+    if (survey.font_family) {
+      try {
+        const parsed = JSON.parse(survey.font_family);
+        surveyFont.value = 'custom';
+        customFontBox.classList.remove('hidden');
+        customFontName.value = parsed.name || '';
+        customFontLink.value = parsed.url || '';
+        applyCustomFontPreview();
+      } catch (e) {
+        surveyFont.value = survey.font_family;
+        document.body.style.fontFamily = `'${survey.font_family}', system-ui, sans-serif`;
+      }
+    }
+
+    // Fondo
+    surveyBgType.value = survey.background_type || 'color';
+    if (survey.background_type === 'image') {
+      bgSolidPicker.classList.add('hidden');
+      bgImageUploader.classList.remove('hidden');
+      if (survey.background_value) {
+        uploadedImageUrl = survey.background_value;
+        bgImagePreview.src = survey.background_value;
+        bgImagePreviewContainer.classList.remove('hidden');
+      }
+    } else {
+      bgSolidPicker.classList.remove('hidden');
+      bgImageUploader.classList.add('hidden');
+      if (survey.background_value) {
+        bgSolidColor.value = survey.background_value;
+        bgHexLabel.textContent = survey.background_value;
+      }
+    }
+
+    // 2. Cargar preguntas y opciones
+    const { data: qData, error: qError } = await supabaseClient
+      .from('questions')
+      .select(`
+        id,
+        title,
+        question_type,
+        is_required,
+        order_index,
+        question_options(id, label, order_index)
+      `)
+      .eq('survey_id', surveyId)
+      .order('order_index', { ascending: true });
+
+    if (qError) throw qError;
+
+    // 3. Cargar condiciones
+    const { data: condData, error: cError } = await supabaseClient
+      .from('question_conditions')
+      .select('*')
+      .eq('survey_id', surveyId);
+
+    if (cError) throw cError;
+
+    // Reconstruir estructura de memoria local
+    questions = (qData || []).map(q => {
+      const opts = (q.question_options || [])
+        .sort((a, b) => a.order_index - b.order_index)
+        .map(o => o.label);
+
+      const conditionMatch = (condData || []).find(c => c.target_question_id === q.id);
+
+      return {
+        id: q.id,
+        title: q.title || '',
+        type: q.question_type || 'multiple_choice',
+        is_required: !!q.is_required,
+        options: opts.length > 0 ? opts : ['Opción 1', 'Opción 2'],
+        condition: {
+          depends_on_question_id: conditionMatch ? conditionMatch.depends_on_question_id : null,
+          trigger_value: conditionMatch ? conditionMatch.trigger_value : ''
+        }
+      };
+    });
+
+    renderQuestions();
+  } catch (err) {
+    console.error("Error al cargar encuesta en edición:", err);
+    alert("Error al recuperar los datos de la encuesta: " + err.message);
+  }
 }
 
 // ==========================================================
@@ -274,7 +395,7 @@ function getTriggerInputHtml(parentQuestion, currentValue, qIndex) {
   if (parentQuestion.type === 'multiple_choice' || parentQuestion.type === 'checkbox') {
     let optionsHtml = `<option value="">-- Elige la opción que la activa --</option>`;
     parentQuestion.options.forEach(opt => {
-      const isSel = (opt.trim() === currentValue.trim() && opt.trim() !== '') ? 'selected' : '';
+      const isSel = (opt.trim() === String(currentValue).trim() && opt.trim() !== '') ? 'selected' : '';
       optionsHtml += `<option value="${escapeHtml(opt)}" ${isSel}>Opción: "${escapeHtml(opt)}"</option>`;
     });
     return `
@@ -286,7 +407,7 @@ function getTriggerInputHtml(parentQuestion, currentValue, qIndex) {
     return `
       <select class="app-input text-xs bg-white font-medium text-indigo-700" onchange="updateConditionValue(${qIndex}, this.value)">
         <option value="">-- Elige la puntuación que la activa --</option>
-        ${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${currentValue == n ? 'selected' : ''}>Puntuación: ${n}</option>`).join('')}
+        ${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${String(currentValue) === String(n) ? 'selected' : ''}>Puntuación: ${n}</option>`).join('')}
       </select>
     `;
   } else {
@@ -378,7 +499,7 @@ window.updateConditionValue = (qIndex, value) => {
 };
 
 // ==========================================================
-// 4. GUARDAR / PUBLICAR Y CREAR SUB-WEB
+// 4. GUARDAR / EDITAR ENCUESTA
 // ==========================================================
 btnSaveDraft.addEventListener('click', () => saveSurvey(false));
 btnPublish.addEventListener('click', () => saveSurvey(true));
@@ -427,37 +548,74 @@ async function saveSurvey(isPublished) {
     });
   }
 
-  const baseSlug = title
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '');
-  const uniqueSlug = `${baseSlug || 'encuesta'}-${Math.random().toString(36).substring(2, 7)}`;
-
   btnSaveDraft.disabled = true;
   btnPublish.disabled = true;
 
   try {
-    const { data: surveyData, error: surveyError } = await supabaseClient
-      .from('surveys')
-      .insert({
-        user_id: currentUser.id,
-        title: title,
-        description: surveyDesc.value.trim(),
-        slug: uniqueSlug,
-        is_published: isPublished,
-        published_at: isPublished ? new Date().toISOString() : null,
-        primary_color: primaryCol,
-        background_type: bgType,
-        background_value: bgValue,
-        font_family: fontFamilyPayload
-      })
-      .select()
-      .single();
+    let surveyId = editingSurveyId;
+    let finalSlug = '';
 
-    if (surveyError) throw surveyError;
-    const surveyId = surveyData.id;
+    if (editingSurveyId) {
+      // MODO EDICIÓN: Actualizar registro existente
+      const { data: currentSurvey, error: getError } = await supabaseClient
+        .from('surveys')
+        .select('slug')
+        .eq('id', editingSurveyId)
+        .single();
 
+      if (getError) throw getError;
+      finalSlug = currentSurvey.slug;
+
+      const { error: updateError } = await supabaseClient
+        .from('surveys')
+        .update({
+          title: title,
+          description: surveyDesc.value.trim(),
+          is_published: isPublished,
+          published_at: isPublished ? new Date().toISOString() : null,
+          primary_color: primaryCol,
+          background_type: bgType,
+          background_value: bgValue,
+          font_family: fontFamilyPayload
+        })
+        .eq('id', editingSurveyId);
+
+      if (updateError) throw updateError;
+
+      // Limpiar preguntas previas (cascada elimina opciones y condiciones)
+      await supabaseClient.from('questions').delete().eq('survey_id', editingSurveyId);
+
+    } else {
+      // MODO CREACIÓN: Insertar nueva encuesta
+      const baseSlug = title
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
+      finalSlug = `${baseSlug || 'encuesta'}-${Math.random().toString(36).substring(2, 7)}`;
+
+      const { data: surveyData, error: surveyError } = await supabaseClient
+        .from('surveys')
+        .insert({
+          user_id: currentUser.id,
+          title: title,
+          description: surveyDesc.value.trim(),
+          slug: finalSlug,
+          is_published: isPublished,
+          published_at: isPublished ? new Date().toISOString() : null,
+          primary_color: primaryCol,
+          background_type: bgType,
+          background_value: bgValue,
+          font_family: fontFamilyPayload
+        })
+        .select()
+        .single();
+
+      if (surveyError) throw surveyError;
+      surveyId = surveyData.id;
+    }
+
+    // Insertar preguntas y opciones
     const idMapping = {};
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -491,6 +649,7 @@ async function saveSurvey(isPublished) {
       }
     }
 
+    // Insertar condiciones
     const conditionsPayload = [];
     questions.forEach(q => {
       if (q.condition.depends_on_question_id && idMapping[q.condition.depends_on_question_id]) {
@@ -511,7 +670,7 @@ async function saveSurvey(isPublished) {
       if (condError) throw condError;
     }
 
-    showSuccessModal(uniqueSlug, isPublished);
+    showSuccessModal(finalSlug, isPublished);
 
   } catch (err) {
     console.error("Error al guardar:", err);
@@ -591,5 +750,4 @@ function escapeHtml(str) {
 
 window.addEventListener('DOMContentLoaded', () => {
   initSession();
-  btnAddQuestion.click();
 });
