@@ -138,7 +138,7 @@ function renderQuestions() {
   questionsData.forEach((q, idx) => {
     const qWrapper = document.createElement('div');
     qWrapper.id = `q-card-${q.id}`;
-    qWrapper.className = 'app-card survey-card-container p-6 sm:p-7 space-y-4 conditional-question';
+    qWrapper.className = 'app-card survey-card-container p-5 sm:p-7 space-y-4 conditional-question';
 
     let optionsHtml = '';
 
@@ -161,7 +161,7 @@ function renderQuestions() {
     } else if (q.question_type === 'scale') {
       optionsHtml = `
         <div class="space-y-3">
-          <div class="flex items-center justify-between gap-2 max-w-sm pt-2">
+          <div class="flex items-center justify-between gap-1.5 sm:gap-2 max-w-sm pt-2">
             ${[1, 2, 3, 4, 5].map(n => `
               <button type="button" id="scale-btn-${q.id}-${n}" onclick="handleScaleSelect('${q.id}',${n})" class="scale-btn">
                 ${n}
@@ -293,7 +293,11 @@ answersForm.addEventListener('submit', async (e) => {
     }
   }
 
+  const btnIcon = document.getElementById('btn-submit-icon');
   btnSubmitSurvey.disabled = true;
+  if (btnIcon) {
+    btnIcon.className = "bi bi-arrow-repeat spin";
+  }
   btnSubmitText.textContent = "Enviando respuestas...";
 
   try {
@@ -329,6 +333,9 @@ answersForm.addEventListener('submit', async (e) => {
     console.error("Error al enviar respuestas:", err);
     alert("Hubo un error al guardar tus respuestas: " + err.message);
     btnSubmitSurvey.disabled = false;
+    if (btnIcon) {
+      btnIcon.className = "bi bi-send-fill";
+    }
     btnSubmitText.textContent = "Enviar Respuestas";
   }
 });
