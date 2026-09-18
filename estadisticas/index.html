@@ -16,6 +16,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS para exportar a Microsoft Excel (.xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-['Inter'] min-h-screen flex flex-col">
 
@@ -87,7 +89,7 @@
       <p class="text-sm text-slate-500 font-medium">Procesando respuestas y preparando filtros...</p>
     </div>
 
-    <!-- SECCIÓN 3: PANEL DE CONFIGURACIÓN Y VISUALIZACIÓN (SE MUESTRA TRAS ELEGIR ENCUESTA) -->
+    <!-- SECCIÓN 3: PANEL DE CONFIGURACIÓN Y VISUALIZACIÓN -->
     <div id="stats-dashboard" class="hidden space-y-8">
 
       <!-- TARJETA RESUMEN DE LA ENCUESTA ACTIVA -->
@@ -121,7 +123,7 @@
             <p class="text-xs text-slate-500 mt-0.5">Configura qué quieres graficar y qué condiciones filtrar.</p>
           </div>
 
-          <!-- 1. Tipo de Gráfica (5 Tipos) -->
+          <!-- 1. Tipo de Gráfica -->
           <div class="space-y-1.5">
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Tipo de Gráfica</label>
             <select id="chart-type-select" class="app-input text-xs font-medium">
@@ -152,7 +154,7 @@
             </select>
           </div>
 
-          <!-- 4. Filtro Condicional B (Cruce secundario) -->
+          <!-- 4. Filtro Condicional B -->
           <div class="space-y-2 pt-2 border-t border-slate-100">
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Filtro Condicional #2 (Opcional)</label>
             <select id="filter-b-question" class="app-input text-xs">
@@ -163,7 +165,7 @@
             </select>
           </div>
 
-          <!-- Botón de Actualizar / Aplicar Filtros -->
+          <!-- Botón de Actualizar -->
           <div class="pt-2">
             <button type="button" id="btn-apply-filters" class="btn-primary w-full py-2.5 text-xs font-bold">
               ⚡ Aplicar Filtros y Graficar
@@ -171,17 +173,28 @@
           </div>
         </div>
 
-        <!-- VISUALIZADOR DEL GRÁFICO + BOTÓN DE DESCARGA -->
+        <!-- VISUALIZADOR DEL GRÁFICO + BOTONES DE EXPORTACIÓN -->
         <div class="lg:col-span-2 app-card p-6 bg-white border border-slate-200 flex flex-col justify-between space-y-4">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
             <div>
               <span id="chart-sub-label" class="text-xs font-semibold text-slate-400">Distribución de datos</span>
               <h4 id="chart-display-title" class="text-base font-bold text-slate-900">Vista Gráfica</h4>
             </div>
-            <!-- Botón de Descarga de Imagen -->
-            <button type="button" id="btn-download-chart" class="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 font-bold shadow-sm">
-              💾 Descargar Imagen (.PNG)
-            </button>
+            
+            <!-- Acciones de Exportación -->
+            <div class="flex flex-wrap items-center gap-2">
+              
+              <!-- Botón Directo para Excel -->
+              <button type="button" id="btn-export-excel" class="btn-primary text-xs py-2 px-4 flex items-center gap-2 font-bold shadow-sm rounded-lg" title="Descargar datos en formato Microsoft Excel (.xlsx)">
+                📗 Descargar Excel
+              </button>
+
+              <!-- Botón de PNG -->
+              <button type="button" id="btn-download-chart" class="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 font-bold shadow-sm" title="Descargar imagen del gráfico">
+                🖼️ Imagen PNG
+              </button>
+              
+            </div>
           </div>
 
           <!-- Contenedor del Canvas -->
@@ -205,7 +218,7 @@
 
     </div>
 
-    <!-- ESTADO VACÍO (CUANDO NO HAY ENCUESTAS CREADAS) -->
+    <!-- ESTADO VACÍO -->
     <div id="empty-state" class="hidden text-center py-16 px-4 bg-white rounded-3xl border-2 border-dashed border-slate-200 max-w-lg mx-auto">
       <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4">
         📊

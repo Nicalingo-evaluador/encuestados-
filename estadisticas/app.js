@@ -30,6 +30,10 @@ const filterBQuestion = document.getElementById('filter-b-question');
 const filterBValue = document.getElementById('filter-b-value');
 const btnApplyFilters = document.getElementById('btn-apply-filters');
 const btnDownloadChart = document.getElementById('btn-download-chart');
+
+// Botón de exportación a Excel
+const btnExportExcel = document.getElementById('btn-export-excel');
+
 const chartDisplayTitle = document.getElementById('chart-display-title');
 const chartSubLabel = document.getElementById('chart-sub-label');
 const noFilteredData = document.getElementById('no-filtered-data');
@@ -529,7 +533,56 @@ function renderChartObject(labels, dataValues) {
 }
 
 // ==========================================================
-// 6. EXPORTAR / DESCARGAR EN PNG
+// 6. EXPORTACIÓN A EXCEL NATIVO CON FILTROS
+// ==========================================================
+
+function getSafeFileName(extension) {
+  const rawTitle = activeSurveyTitle.textContent || 'encuesta';
+  const cleanTitle = rawTitle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
+  return `respuestas_${cleanTitle}_${Date.now()}.${extension}`;
+}
+
+// Exportar TODOS los datos crudos e incrustar la función de Autofiltro de Excel
+function exportToExcel() {
+  if (!activeSurveyQuestions.length || !activeSurveyRawResponses.length) {
+    alert("No hay respuestas disponibles para exportar.");
+    return;
+  }
+
+  // 1. Mapear datos en bruto (sin filtros visuales)
+  const rows = activeSurveyRawResponses.map((resp, index) => {
+    const rowObj = { '#': index + 1 };
+    activeSurveyQuestions.forEach((q, idx) => {
+      const answers = resp[q.id] || [];
+      rowObj[`P${idx + 1}: ${q.title}`] = answers.join(', ');
+    });
+    return rowObj;
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+
+  // 2. Ajuste automático de ancho de las celdas
+  const colWidths = Object.keys(rows[0]).map(key => ({ wch: Math.max(key.length, 15) }));
+  worksheet['!cols'] = colWidths;
+
+  // 3. Activar los filtros nativos de Excel en la primera fila (los encabezados)
+  if (worksheet['!ref']) {
+    worksheet['!autofilter'] = { ref: worksheet['!ref'] };
+  }
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Datos Completos");
+
+  XLSX.writeFile(workbook, getSafeFileName('xlsx'));
+}
+
+// Listener del botón de Excel
+if (btnExportExcel) {
+  btnExportExcel.addEventListener('click', exportToExcel);
+}
+
+// ==========================================================
+// 7. EXPORTAR / DESCARGAR EN PNG
 // ==========================================================
 btnDownloadChart.addEventListener('click', () => {
   const canvas = document.getElementById('main-analytics-canvas');
