@@ -105,51 +105,52 @@ function renderCards(surveysList) {
     const responseCount = survey.survey_responses?.[0]?.count || 0;
 
     const card = document.createElement('div');
-    card.className = 'app-card survey-card p-6 bg-white border border-slate-200';
+    card.className = 'app-card survey-card p-5 sm:p-6 bg-white border border-slate-200';
 
     card.innerHTML = `
       <div>
         <div class="flex items-center justify-between gap-2 mb-3">
-          <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${survey.is_published ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
-            ${survey.is_published ? '● Publicada' : '○ Borrador'}
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 ${survey.is_published ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
+            <i class="bi ${survey.is_published ? 'bi-record-fill' : 'bi-circle'} text-[9px]"></i>
+            ${survey.is_published ? 'Publicada' : 'Borrador'}
           </span>
           <span class="text-xs text-slate-400 font-medium">
             ${survey.is_published ? 'Lanzada:' : 'Creada:'} ${dateFormatted}
           </span>
         </div>
 
-        <h2 class="text-lg font-bold text-slate-900 mb-1 leading-snug line-clamp-1" title="${escapeHtml(survey.title)}">
+        <h2 class="text-base sm:text-lg font-bold text-slate-900 mb-1 leading-snug line-clamp-1" title="${escapeHtml(survey.title)}">
           ${escapeHtml(survey.title)}
         </h2>
-        <p class="text-sm text-slate-500 line-clamp-2 mb-4">
+        <p class="text-xs sm:text-sm text-slate-500 line-clamp-2 mb-4">
           ${escapeHtml(survey.description || 'Sin descripción proporcionada.')}
         </p>
 
         <!-- Contador de respuestas recibidas -->
         <div class="inline-flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 mb-4">
-          <span>📊</span>
+          <i class="bi bi-bar-chart-line text-indigo-600"></i>
           <span class="font-semibold text-indigo-600">${responseCount}</span> respuestas recopiladas
         </div>
       </div>
 
       <!-- Pie de la Card con Enlace, Estadísticas, Editar y Eliminar -->
       <div class="pt-4 border-t border-slate-100 space-y-3">
-        <div class="flex items-center justify-between">
-          <button type="button" onclick="copyLink('${survey.slug}')" class="text-xs text-indigo-600 font-semibold hover:underline flex items-center gap-1">
-            🔗 Copiar Enlace
+        <div class="flex items-center justify-between gap-2">
+          <button type="button" onclick="copyLink('${survey.slug}')" class="text-xs text-indigo-600 font-semibold hover:underline inline-flex items-center gap-1">
+            <i class="bi bi-link-45deg text-sm"></i> Copiar Enlace
           </button>
           
           <button type="button" onclick="goToStats('${survey.id}')" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium py-1.5 px-3 rounded-lg transition inline-flex items-center gap-1">
-            📈 Ver Gráficas
+            <i class="bi bi-graph-up text-xs"></i> Ver Gráficas
           </button>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-50">
-          <button type="button" onclick="editSurvey('${survey.id}')" class="text-xs text-slate-600 hover:text-indigo-600 font-medium py-1 px-2.5 rounded transition flex items-center gap-1" title="Editar Encuesta">
-            ✏️ Editar
+          <button type="button" onclick="editSurvey('${survey.id}')" class="text-xs text-slate-600 hover:text-indigo-600 font-medium py-1 px-2.5 rounded transition inline-flex items-center gap-1" title="Editar Encuesta">
+            <i class="bi bi-pencil"></i> Editar
           </button>
-          <button type="button" onclick="deleteSurvey('${survey.id}', '${survey.background_type}', '${survey.background_value}')" class="text-xs text-slate-400 hover:text-red-600 font-medium py-1 px-2.5 rounded transition flex items-center gap-1" title="Eliminar Encuesta">
-            🗑️ Eliminar
+          <button type="button" onclick="deleteSurvey('${survey.id}', '${survey.background_type}', '${survey.background_value}')" class="text-xs text-slate-400 hover:text-red-600 font-medium py-1 px-2.5 rounded transition inline-flex items-center gap-1" title="Eliminar Encuesta">
+            <i class="bi bi-trash3"></i> Eliminar
           </button>
         </div>
       </div>

@@ -10,6 +10,7 @@ const passwordInput = document.getElementById('login-password');
 const loginError = document.getElementById('login-error');
 const btnSubmit = document.getElementById('btn-submit');
 const btnText = document.getElementById('btn-text');
+const btnIcon = document.getElementById('btn-icon');
 
 // Redirección segura compatible con subdirectorios de GitHub Pages
 function navigateTo(targetRelativePath) {
@@ -33,6 +34,10 @@ loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   loginError.classList.add('hidden');
   btnSubmit.disabled = true;
+  
+  if (btnIcon) {
+    btnIcon.className = "bi bi-arrow-repeat spin";
+  }
   btnText.textContent = "Verificando...";
 
   const email = emailInput.value.trim();
@@ -44,9 +49,12 @@ loginForm.addEventListener('submit', async (e) => {
   });
 
   if (error) {
-    loginError.textContent = "Error al iniciar sesión: " + error.message;
+    loginError.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i> Error: ${error.message}`;
     loginError.classList.remove('hidden');
     btnSubmit.disabled = false;
+    if (btnIcon) {
+      btnIcon.className = "bi bi-box-arrow-in-right";
+    }
     btnText.textContent = "Ingresar al Constructor";
   } else {
     navigateTo("crear-encuesta/index.html");

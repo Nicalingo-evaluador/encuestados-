@@ -257,7 +257,7 @@ bgImageFile.addEventListener('change', async (e) => {
     return;
   }
 
-  uploadStatus.textContent = "Subiendo imagen al bucket...";
+  uploadStatus.innerHTML = `<i class="bi bi-arrow-repeat spin me-1"></i> Subiendo imagen...`;
   const fileExt = file.name.split('.').pop();
   const filePath = `${currentUser.id}/${Date.now()}_bg.${fileExt}`;
 
@@ -267,7 +267,7 @@ bgImageFile.addEventListener('change', async (e) => {
 
   if (error) {
     console.error("Error al subir archivo a Storage:", error);
-    uploadStatus.textContent = "Error al subir la imagen.";
+    uploadStatus.innerHTML = `<span class="text-red-500"><i class="bi bi-x-circle me-1"></i> Error al subir</span>`;
     return;
   }
 
@@ -276,7 +276,7 @@ bgImageFile.addEventListener('change', async (e) => {
     .getPublicUrl(filePath);
 
   uploadedImageUrl = publicUrl;
-  uploadStatus.textContent = "¡Imagen guardada exitosamente!";
+  uploadStatus.innerHTML = `<span class="text-emerald-600"><i class="bi bi-check-circle me-1"></i> ¡Imagen guardada!</span>`;
   bgImagePreview.src = publicUrl;
   bgImagePreviewContainer.classList.remove('hidden');
 });
@@ -310,7 +310,8 @@ function renderQuestions() {
 
   questions.forEach((q, qIndex) => {
     const card = document.createElement('div');
-    card.className = 'app-card question-card p-6 border border-slate-200 bg-white relative space-y-4';
+    // Se usa p-4 sm:p-6 para adaptarse correctamente a pantallas móviles
+    card.className = 'app-card question-card p-4 sm:p-6 border border-slate-200 bg-white relative space-y-4';
 
     const previousQuestions = questions.slice(0, qIndex);
     let conditionSelectOptions = `<option value="">-- Sin condición (Mostrar a todos) --</option>`;
@@ -333,16 +334,16 @@ function renderQuestions() {
 
     card.innerHTML = `
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">
-          Pregunta #${qIndex + 1}
+        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md inline-flex items-center gap-1.5">
+          <i class="bi bi-question-circle"></i> Pregunta #${qIndex + 1}
         </span>
         <div class="flex items-center gap-3">
-          <label class="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer">
+          <label class="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer select-none">
             <input type="checkbox" onchange="toggleRequired(${qIndex}, this.checked)" ${q.is_required ? 'checked' : ''} class="rounded text-indigo-600 focus:ring-indigo-500">
             Obligatoria
           </label>
-          <button type="button" onclick="removeQuestion(${qIndex})" class="text-slate-400 hover:text-red-500 transition text-sm" title="Eliminar Pregunta">
-            🗑️
+          <button type="button" onclick="removeQuestion(${qIndex})" class="text-slate-400 hover:text-red-500 transition p-1" title="Eliminar Pregunta">
+            <i class="bi bi-trash3 text-sm"></i>
           </button>
         </div>
       </div>
@@ -367,16 +368,16 @@ function renderQuestions() {
         ${renderTypeContent(q, qIndex)}
       </div>
 
-      <div class="pt-4 border-t border-slate-100 bg-slate-50/70 p-4 rounded-xl space-y-2">
+      <div class="pt-4 border-t border-slate-100 bg-slate-50/70 p-3 sm:p-4 rounded-xl space-y-2">
         <div class="flex items-center gap-2">
-          <span class="text-indigo-600 font-bold">🔀</span>
+          <i class="bi bi-signpost-split-fill text-indigo-600"></i>
           <label class="text-xs font-bold uppercase tracking-wider text-slate-700">
             Camino de Selección (Lógica Condicional)
           </label>
         </div>
         <p class="text-xs text-slate-500">Muestra esta pregunta solo si el encuestado seleccionó una opción específica antes.</p>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-2">
           <select class="app-input text-xs bg-white" onchange="updateConditionDependence(${qIndex}, this.value)">
             ${conditionSelectOptions}
           </select>
@@ -421,25 +422,27 @@ function renderTypeContent(q, qIndex) {
   if (q.type === 'multiple_choice' || q.type === 'checkbox') {
     let optionsHtml = `<div class="space-y-2 mb-2">`;
     q.options.forEach((opt, optIndex) => {
+      const icon = q.type === 'multiple_choice' ? 'bi-circle' : 'bi-square';
       optionsHtml += `
         <div class="flex items-center gap-2 option-row">
-          <span class="text-slate-400 text-xs">${q.type === 'multiple_choice' ? '⚪' : '◻️'}</span>
+          <i class="bi ${icon} text-slate-400 text-xs shrink-0"></i>
           <input type="text" class="app-input text-sm py-1.5" value="${escapeHtml(opt)}" oninput="updateOptionValue(${qIndex}, ${optIndex}, this.value)" placeholder="Opción ${optIndex + 1}">
-          ${q.options.length > 1 ? `<button type="button" onclick="removeOption(${qIndex},${optIndex})" class="text-slate-400 hover:text-red-500 text-xs px-2 py-1">✕</button>` : ''}
+          ${q.options.length > 1 ? `<button type="button" onclick="removeOption(${qIndex},${optIndex})" class="text-slate-400 hover:text-red-500 text-xs px-2 py-1 shrink-0"><i class="bi bi-x-lg"></i></button>` : ''}
         </div>
       `;
     });
     optionsHtml += `</div>
-      <button type="button" onclick="addOption(${qIndex})" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 mt-1">
-        + Añadir Opción
+      <button type="button" onclick="addOption(${qIndex})" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1.5 mt-1">
+        <i class="bi bi-plus-lg"></i> Añadir Opción
       </button>
     `;
     return optionsHtml;
   } else if (q.type === 'scale') {
     return `
       <div class="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200">
-        <span>⭐ Escala del 1 al 5:</span>
-        <span class="font-medium text-slate-700">1 (Totalmente en desacuerdo) ➔ 5 (Totalmente de acuerdo)</span>
+        <i class="bi bi-star-fill text-amber-400"></i>
+        <span>Escala del 1 al 5:</span>
+        <span class="font-medium text-slate-700">1 (Totalmente en desacuerdo) <i class="bi bi-arrow-right mx-1"></i> 5 (Totalmente de acuerdo)</span>
       </div>
     `;
   } else {
@@ -699,7 +702,7 @@ function showSuccessModal(slug, isPublished) {
     <div id="survey-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
       <div class="app-card max-w-md w-full p-6 sm:p-8 space-y-6 text-center">
         <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-3xl">
-          🎉
+          <i class="bi bi-check2-circle"></i>
         </div>
         
         <div>
@@ -715,18 +718,18 @@ function showSuccessModal(slug, isPublished) {
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Enlace directo para encuestados</label>
           <div class="flex items-center gap-2">
             <input type="text" readonly value="${directSurveyUrl}" id="modal-url-input" class="app-input text-xs bg-white select-all">
-            <button type="button" onclick="copyModalUrl()" class="btn-primary text-xs py-2 px-3 whitespace-nowrap">
-              Copiar
+            <button type="button" onclick="copyModalUrl()" class="btn-primary text-xs py-2 px-3 whitespace-nowrap inline-flex items-center gap-1">
+              <i class="bi bi-clipboard"></i> Copiar
             </button>
           </div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 pt-2">
-          <a href="${directSurveyUrl}" target="_blank" class="btn-primary flex-1 text-sm py-2.5">
-            🌐 Abrir Sub-Web
+          <a href="${directSurveyUrl}" target="_blank" class="btn-primary flex-1 text-sm py-2.5 inline-flex items-center justify-center gap-1.5">
+            <i class="bi bi-box-arrow-up-right"></i> Abrir Sub-Web
           </a>
-          <button type="button" onclick="goToHistory()" class="btn-secondary flex-1 text-sm py-2.5">
-            📑 Ver Historial
+          <button type="button" onclick="goToHistory()" class="btn-secondary flex-1 text-sm py-2.5 inline-flex items-center justify-center gap-1.5">
+            <i class="bi bi-journal-text"></i> Ver Historial
           </button>
         </div>
       </div>

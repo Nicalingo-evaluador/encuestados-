@@ -150,7 +150,7 @@ function renderCarousel(surveys) {
         ${escapeHtml(survey.description || 'Sin descripción.')}
       </p>
       <div class="flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50/70 py-1 px-2.5 rounded-lg border border-indigo-100 font-semibold">
-        <span>👥</span> ${count} ${count === 1 ? 'encuestado' : 'encuestados'}
+        <i class="bi bi-people-fill text-indigo-600"></i> ${count} ${count === 1 ? 'encuestado' : 'encuestados'}
       </div>
     `;
 

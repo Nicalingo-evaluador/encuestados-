@@ -6,11 +6,26 @@
 
 .question-card:focus-within {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
 }
 
 .option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
   animation: fadeIn 0.2s ease-in-out;
+}
+
+.option-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.question-card select,
+.question-card input[type="text"] {
+  min-width: 0;
+  max-width: 100%;
 }
 
 @keyframes fadeIn {
@@ -27,5 +42,12 @@
 /* Modal Backdrop */
 .modal-backdrop {
   background-color: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(5px);
+}
+
+/* Reducción de padding en tarjeta para pantallas móviles */
+@media (max-width: 640px) {
+  .app-card {
+    padding: 1rem !important;
+  }
 }

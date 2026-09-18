@@ -27,3 +27,9 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+@media (max-width: 640px) {
+  .survey-card {
+    padding: 1.15rem !important;
+  }
+}

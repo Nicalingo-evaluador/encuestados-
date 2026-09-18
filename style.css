@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
   --primary: #4f46e5;
@@ -22,17 +22,21 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 body {
   background-color: var(--bg-main);
+  background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.04) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.04) 0px, transparent 50%);
   color: var(--text-main);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100%;
 }
 
-/* Inputs y Formularios Globales */
+/* Inputs y Formularios Globales Responsivos */
 .app-input {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -42,7 +46,8 @@ body {
   color: var(--text-main);
   font-size: 0.95rem;
   outline: none;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  max-width: 100%;
 }
 
 .app-input:focus {
@@ -50,9 +55,9 @@ body {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
 }
 
-/* Botones Globales */
+/* Botones Globales Responsivos */
 .btn-primary {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
   color: #ffffff;
   font-weight: 600;
   padding: 0.75rem 1.25rem;
@@ -65,11 +70,24 @@ body {
   gap: 0.5rem;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-hover);
+  background: linear-gradient(135deg, #4338ca, #4f46e5);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-secondary {
@@ -80,7 +98,13 @@ body {
   padding: 0.75rem 1.25rem;
   border-radius: var(--radius-md);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .btn-secondary:hover {
@@ -95,9 +119,45 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-subtle);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
 }
 
 .app-card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Firma pequeña y discreta */
+.signature {
+  opacity: 0.35;
+  letter-spacing: 0.05em;
+  font-weight: 400;
+  transition: opacity 0.3s ease;
+}
+
+.signature:hover {
+  opacity: 0.85;
+}
+
+/* Spinner para botones en carga */
+.spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Ajustes Responsivos para Pantallas Pequeñas */
+@media (max-width: 640px) {
+  .btn-primary, .btn-secondary {
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .app-card {
+    border-radius: var(--radius-md);
+  }
 }
