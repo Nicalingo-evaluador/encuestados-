@@ -16,11 +16,13 @@
   <link rel="stylesheet" href="style.css">
   <!-- Supabase JS v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- QR Code Styling CDN para personalización avanzada y alta calidad -->
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-['Inter'] min-h-screen flex flex-col">
 
   <!-- HEADER DE NAVEGACIÓN RESPONSIVO -->
-  <header class="bg-white/95 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
+  <header class="bg-white/95 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
       
       <!-- Marca / Logo -->
@@ -62,7 +64,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
       <div>
         <h1 class="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Mis Encuestas</h1>
-        <p class="text-xs sm:text-sm text-slate-500 mt-1">Administra tus formularios, copia los links de acceso y revisa las estadísticas.</p>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">Administra tus formularios, genera QR personalizados y revisa las estadísticas.</p>
       </div>
 
       <!-- Buscador en tiempo real -->
@@ -104,6 +106,105 @@
     </div>
 
   </main>
+
+  <!-- MODAL / PANEL GENERADOR DE QR PERSONALIZADO -->
+  <div id="qr-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 modal-backdrop">
+    <div class="app-card max-w-lg w-full p-5 sm:p-6 bg-white space-y-4 max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <i class="bi bi-qr-code text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">Personalizar Código QR</h3>
+            <p id="qr-modal-survey-title" class="text-xs text-slate-500 line-clamp-1"></p>
+          </div>
+        </div>
+        <button type="button" onclick="closeQrModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="bi bi-x-lg text-base"></i>
+        </button>
+      </div>
+
+      <!-- Previsualización Centrada -->
+      <div class="flex flex-col items-center justify-center p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
+        <div id="qr-canvas-wrapper" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
+          <!-- Canvas inyectado por QRCodeStyling -->
+        </div>
+        <span class="text-[11px] text-slate-400 mt-2">Previsualización en tiempo real</span>
+      </div>
+
+      <!-- Opciones de Personalización -->
+      <div class="space-y-3 text-xs">
+        
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Color del QR -->
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Color del QR</label>
+            <div class="flex items-center gap-2">
+              <input type="color" id="qr-color-dots" value="#4f46e5" class="w-9 h-8 p-0.5 border border-slate-200 rounded-lg cursor-pointer bg-white" oninput="updateQrCustomization()">
+              <span id="qr-color-dots-label" class="font-mono text-[11px] text-slate-500">#4f46e5</span>
+            </div>
+          </div>
+
+          <!-- Color de Fondo -->
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Color de Fondo</label>
+            <div class="flex items-center gap-2">
+              <input type="color" id="qr-color-bg" value="#ffffff" class="w-9 h-8 p-0.5 border border-slate-200 rounded-lg cursor-pointer bg-white" oninput="updateQrCustomization()">
+              <span id="qr-color-bg-label" class="font-mono text-[11px] text-slate-500">#ffffff</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Forma de los puntos -->
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Forma de Puntos</label>
+            <select id="qr-dots-type" class="app-input text-xs py-1.5" onchange="updateQrCustomization()">
+              <option value="rounded" selected>Redondeado</option>
+              <option value="dots">Puntos circulares</option>
+              <option value="classy">Elegante (Classy)</option>
+              <option value="classy-rounded">Elegante curvo</option>
+              <option value="square">Cuadrado estándar</option>
+              <option value="extra-rounded">Extra redondeado</option>
+            </select>
+          </div>
+
+          <!-- Forma de las Esquinas -->
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Estilo de Esquinas</label>
+            <select id="qr-corners-type" class="app-input text-xs py-1.5" onchange="updateQrCustomization()">
+              <option value="extra-rounded" selected>Curvas suaves</option>
+              <option value="dot">Circular</option>
+              <option value="square">Cuadrado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Imagen / Logotipo Central Opcional -->
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">Logo o Imagen Central (Opcional)</label>
+          <div class="flex items-center gap-2">
+            <input type="file" id="qr-logo-file" accept="image/png, image/jpeg, image/svg+xml, image/webp" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer w-full" onchange="handleQrLogoUpload(event)">
+            <button type="button" id="btn-remove-logo" onclick="removeQrLogo()" class="hidden text-xs text-red-500 hover:text-red-700 py-1 px-2 border border-red-200 rounded-lg whitespace-nowrap" title="Quitar imagen">
+              Quitar
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Botón de Descarga PNG en Alta Calidad -->
+      <div class="pt-2 border-t border-slate-100 flex gap-2">
+        <button type="button" onclick="downloadQrHighRes()" class="btn-primary w-full py-2.5 text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-2 shadow-sm">
+          <i class="bi bi-download"></i>
+          <span>Descargar PNG (Alta Calidad)</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- FOOTER CON FIRMA DISCRETA -->
   <footer class="py-6 border-t border-slate-200/80 mt-12 text-center">

@@ -8,12 +8,31 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
 let allSurveys = [];
 
+// Estado para el generador de QR
+let currentQrInstance = null;
+let currentQrUrl = "";
+let currentQrLogoDataUrl = null;
+let currentQrSurveyTitle = "encuesta";
+
 // Elementos del DOM
 const loadingSpinner = document.getElementById('loading-spinner');
 const surveysGrid = document.getElementById('surveys-grid');
 const emptyState = document.getElementById('empty-state');
 const searchInput = document.getElementById('search-input');
 const btnLogout = document.getElementById('btn-logout');
+
+// Modal QR
+const qrModal = document.getElementById('qr-modal');
+const qrCanvasWrapper = document.getElementById('qr-canvas-wrapper');
+const qrModalSurveyTitle = document.getElementById('qr-modal-survey-title');
+const qrColorDots = document.getElementById('qr-color-dots');
+const qrColorDotsLabel = document.getElementById('qr-color-dots-label');
+const qrColorBg = document.getElementById('qr-color-bg');
+const qrColorBgLabel = document.getElementById('qr-color-bg-label');
+const qrDotsType = document.getElementById('qr-dots-type');
+const qrCornersType = document.getElementById('qr-corners-type');
+const qrLogoFile = document.getElementById('qr-logo-file');
+const btnRemoveLogo = document.getElementById('btn-remove-logo');
 
 // 1. Validar Sesión del Creador
 async function initSession() {
@@ -84,7 +103,7 @@ async function fetchSurveys() {
   renderCards(allSurveys);
 }
 
-// 4. Renderizar Cards con Datos y Botones
+// 4. Renderizar Cards con Datos y Botones (incluyendo botón QR)
 function renderCards(surveysList) {
   if (surveysList.length === 0) {
     surveysGrid.classList.add('hidden');
@@ -133,12 +152,17 @@ function renderCards(surveysList) {
         </div>
       </div>
 
-      <!-- Pie de la Card con Enlace, Estadísticas, Editar y Eliminar -->
+      <!-- Pie de la Card con Enlaces, Generador QR, Estadísticas, Editar y Eliminar -->
       <div class="pt-4 border-t border-slate-100 space-y-3">
-        <div class="flex items-center justify-between gap-2">
-          <button type="button" onclick="copyLink('${survey.slug}')" class="text-xs text-indigo-600 font-semibold hover:underline inline-flex items-center gap-1">
-            <i class="bi bi-link-45deg text-sm"></i> Copiar Enlace
-          </button>
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-3">
+            <button type="button" onclick="copyLink('${survey.slug}')" class="text-xs text-indigo-600 font-semibold hover:underline inline-flex items-center gap-1" title="Copiar URL directa">
+              <i class="bi bi-link-45deg text-sm"></i> Copiar
+            </button>
+            <button type="button" onclick="openQrModal('${survey.slug}', '${escapeHtml(survey.title)}', '${survey.primary_color || '#4f46e5'}')" class="text-xs text-indigo-600 font-semibold hover:underline inline-flex items-center gap-1" title="Generar y personalizar QR">
+              <i class="bi bi-qr-code text-xs"></i> Código QR
+            </button>
+          </div>
           
           <button type="button" onclick="goToStats('${survey.id}')" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium py-1.5 px-3 rounded-lg transition inline-flex items-center gap-1">
             <i class="bi bi-graph-up text-xs"></i> Ver Gráficas
@@ -162,22 +186,190 @@ function renderCards(surveysList) {
 
 // 5. Copiar enlace público adaptado a GitHub Pages y entornos locales
 window.copyLink = (slug) => {
+  const publicUrl = getSurveyPublicUrl(slug);
+  navigator.clipboard.writeText(publicUrl);
+  alert("¡Enlace directo copiado al portapapeles!");
+};
+
+function getSurveyPublicUrl(slug) {
   const fullHref = window.location.href;
   const baseUrl = fullHref.includes('/historial/')
     ? fullHref.split('/historial/')[0]
     : fullHref.substring(0, fullHref.lastIndexOf('/'));
 
-  const publicUrl = `${baseUrl}/encuestado/index.html?s=${slug}`;
-  navigator.clipboard.writeText(publicUrl);
-  alert("¡Enlace directo copiado al portapapeles!");
+  return `${baseUrl}/encuestado/index.html?s=${slug}`;
+}
+
+// 6. Modal y Personalización de Código QR
+window.openQrModal = (slug, title, primaryColor) => {
+  currentQrUrl = getSurveyPublicUrl(slug);
+  currentQrSurveyTitle = title || "encuesta";
+  currentQrLogoDataUrl = null;
+  qrLogoFile.value = "";
+  btnRemoveLogo.classList.add('hidden');
+
+  qrModalSurveyTitle.textContent = title;
+  qrColorDots.value = primaryColor || "#4f46e5";
+  qrColorDotsLabel.textContent = qrColorDots.value;
+  qrColorBg.value = "#ffffff";
+  qrColorBgLabel.textContent = "#ffffff";
+
+  renderQrCode();
+  qrModal.classList.remove('hidden');
 };
 
-// 6. Editar Encuesta
+window.closeQrModal = () => {
+  qrModal.classList.add('hidden');
+};
+
+function renderQrCode() {
+  qrCanvasWrapper.innerHTML = '';
+
+  const dotsColor = qrColorDots.value;
+  const bgColor = qrColorBg.value;
+  const dotsStyle = qrDotsType.value;
+  const cornersStyle = qrCornersType.value;
+
+  currentQrInstance = new QRCodeStyling({
+    width: 210,
+    height: 210,
+    data: currentQrUrl,
+    image: currentQrLogoDataUrl || undefined,
+    margin: 4,
+    qrOptions: {
+      errorCorrectionLevel: 'H' // Nivel 'High' para permitir colocar imágenes al centro sin romper la lectura
+    },
+    dotsOptions: {
+      color: dotsColor,
+      type: dotsStyle
+    },
+    backgroundOptions: {
+      color: bgColor
+    },
+    cornersSquareOptions: {
+      color: dotsColor,
+      type: cornersStyle
+    },
+    cornersDotOptions: {
+      color: dotsColor,
+      type: cornersStyle === 'dot' ? 'dot' : undefined
+    },
+    imageOptions: {
+      crossOrigin: "anonymous",
+      margin: 3,
+      imageSize: 0.3
+    }
+  });
+
+  currentQrInstance.append(qrCanvasWrapper);
+}
+
+window.updateQrCustomization = () => {
+  qrColorDotsLabel.textContent = qrColorDots.value;
+  qrColorBgLabel.textContent = qrColorBg.value;
+
+  if (currentQrInstance) {
+    currentQrInstance.update({
+      dotsOptions: {
+        color: qrColorDots.value,
+        type: qrDotsType.value
+      },
+      backgroundOptions: {
+        color: qrColorBg.value
+      },
+      cornersSquareOptions: {
+        color: qrColorDots.value,
+        type: qrCornersType.value
+      },
+      cornersDotOptions: {
+        color: qrColorDots.value,
+        type: qrCornersType.value === 'dot' ? 'dot' : undefined
+      },
+      image: currentQrLogoDataUrl || undefined
+    });
+  }
+};
+
+window.handleQrLogoUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert("El archivo del logo supera los 2MB.");
+    qrLogoFile.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    currentQrLogoDataUrl = event.target.result;
+    btnRemoveLogo.classList.remove('hidden');
+    updateQrCustomization();
+  };
+  reader.readAsDataURL(file);
+};
+
+window.removeQrLogo = () => {
+  currentQrLogoDataUrl = null;
+  qrLogoFile.value = "";
+  btnRemoveLogo.classList.add('hidden');
+  updateQrCustomization();
+};
+
+// Descargar PNG en Alta Resolución (1000 x 1000 píxeles)
+window.downloadQrHighRes = async () => {
+  if (!currentQrUrl) return;
+
+  const dotsColor = qrColorDots.value;
+  const bgColor = qrColorBg.value;
+  const dotsStyle = qrDotsType.value;
+  const cornersStyle = qrCornersType.value;
+
+  // Creamos una instancia con dimensiones amplificadas para ultra nitidez en impresión y pantallas
+  const highResQr = new QRCodeStyling({
+    width: 1000,
+    height: 1000,
+    data: currentQrUrl,
+    image: currentQrLogoDataUrl || undefined,
+    margin: 20,
+    qrOptions: {
+      errorCorrectionLevel: 'H'
+    },
+    dotsOptions: {
+      color: dotsColor,
+      type: dotsStyle
+    },
+    backgroundOptions: {
+      color: bgColor
+    },
+    cornersSquareOptions: {
+      color: dotsColor,
+      type: cornersStyle
+    },
+    cornersDotOptions: {
+      color: dotsColor,
+      type: cornersStyle === 'dot' ? 'dot' : undefined
+    },
+    imageOptions: {
+      crossOrigin: "anonymous",
+      margin: 12,
+      imageSize: 0.3
+    }
+  });
+
+  const safeName = currentQrSurveyTitle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
+  await highResQr.download({
+    name: `qr_${safeName || 'encuesta'}_HD`,
+    extension: "png"
+  });
+};
+
+// 7. Editar Encuesta
 window.editSurvey = (surveyId) => {
   window.location.href = `../crear-encuesta/index.html?edit=${surveyId}`;
 };
 
-// 7. Eliminar Encuesta y limpiar archivo de Storage
+// 8. Eliminar Encuesta y limpiar archivo de Storage
 window.deleteSurvey = async (surveyId, bgType, bgValue) => {
   if (!confirm("¿Estás seguro de eliminar esta encuesta? Se borrarán todas las preguntas y respuestas recopiladas de forma permanente.")) {
     return;
@@ -207,7 +399,7 @@ window.deleteSurvey = async (surveyId, bgType, bgValue) => {
   }
 };
 
-// 8. Buscador en tiempo real
+// 9. Buscador en tiempo real
 if (searchInput) {
   searchInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase().trim();
